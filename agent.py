@@ -387,7 +387,7 @@ def run_agent():
     # Ensure data directory exists
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     
-    # 1. Load existing results if they exist, to preserve user-managed state (like status updates)
+    # 1. Load existing results if they exist, to preserve user-managed state (like status updates, notes, custom edits)
     existing_data = {"companies": [], "people": []}
     if RESULTS_FILE.exists():
         try:
@@ -396,58 +396,191 @@ def run_agent():
             print(f"Loaded existing dataset with {len(existing_data.get('companies', []))} companies.")
         except Exception as e:
             print(f"Warning: Could not parse existing results.json: {e}. Starting fresh.")
-    
-    # Map of existing company/people status
+            
+    # Mappings of user status/notes to preserve user edits
     status_map = {c["id"]: c.get("status", "Immediate Outreach") for c in existing_data.get("companies", [])}
     notes_map = {c["id"]: c.get("notes", "") for c in existing_data.get("companies", [])}
     
-    # 2. Check for Gemini credentials
+    # Store existing people templates by (companyId, name, field) to preserve user edits
+    people_templates_map = {}
+    for p in existing_data.get("people", []):
+        for field in ["connectionNote", "firstDM", "followUpDM", "linkedinUrl"]:
+            if field in p:
+                people_templates_map[(p["companyId"], p["name"], field)] = p[field]
+                
+    # Initialize active targets with defaults
+    active_companies = {c["id"]: c for c in DEFAULT_COMPANIES}
+    active_people = {(p["companyId"], p["name"]): p for p in DEFAULT_PEOPLE}
+    
+    # Also load any previously dynamically discovered companies/people from existing_data
+    for comp in existing_data.get("companies", []):
+        if comp["id"] not in active_companies:
+            active_companies[comp["id"]] = comp
+    for person in existing_data.get("people", []):
+        key = (person["companyId"], person["name"])
+        if key not in active_people:
+            active_people[key] = person
+
+    # 2. Check for Gemini credentials for Live Discovery
     api_key = os.getenv("GEMINI_API_KEY")
     if api_key and GEMINI_AVAILABLE:
-        print("Gemini API credentials found. Initiating live signal enrichment via GenAI...")
+        print("Gemini API credentials found. Initiating daily client discovery via Google Search Grounding...")
         try:
             genai.configure(api_key=api_key)
-            # Create the model
-            model = genai.GenerativeModel("gemini-1.5-flash")
             
-            # Simple demonstration of LLM invocation to enhance data
-            print("Enriching strategic outreach angles via LLM...")
-            for comp in DEFAULT_COMPANIES:
-                prompt = (
-                    f"Given this company AI adoption signal:\n"
-                    f"Company: {comp['company']}\n"
-                    f"Evidence: {comp['publicEvidence']}\n\n"
-                    f"Write one single innovative and sharp cold-outreach angle (maximum 20 words) "
-                    f"explaining how measuring cycle time helps them justify this spend."
-                )
-                response = model.generate_content(prompt)
-                enhanced_angle = response.text.strip().replace('"', '')
-                if enhanced_angle:
-                    comp["outreachAngle"] = enhanced_angle
-                    print(f" - Enhanced {comp['company']}: {enhanced_angle}")
+            # Use gemini-1.5-flash with search tool
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                tools=[{"google_search": {}}]
+            )
+            
+            # Compile existing names to exclude
+            existing_names = [c["company"] for c in DEFAULT_COMPANIES] + [c.get("company", "") for c in existing_data.get("companies", [])]
+            existing_names_str = ", ".join(list(set(existing_names)))
+            
+            prompt = (
+                f"Search the web using Google Search grounding for recent news articles (published in the past 30 days) "
+                f"about enterprise companies (B2B, tech, finance, or retail) showing strong signals of AI adoption (e.g. Copilot, Claude, Cursor, agentic rollouts), "
+                f"or facing severe AI budget constraints, token cost pressures, or board/COO skepticism about developer productivity. "
+                f"Identify exactly 3 new target companies that are NOT in this list: {existing_names_str}.\n\n"
+                f"Output a valid JSON array of objects representing these targets. Each object must adhere strictly to this schema:\n"
+                f"[\n"
+                f"  {{\n"
+                f"    \"company\": \"Company Name\",\n"
+                f"    \"industry\": \"Industry description (e.g. E-commerce, Finance)\",\n"
+                f"    \"publicEvidence\": \"Detailed summary of the news article signal showing AI adoption, budget overrun, or productivity tracking\",\n"
+                f"    \"sourceUrl\": \"The actual source URL of the news article (must be a real URL from the search)\",\n"
+                f"    \"evidenceDate\": \"YYYY-MM-DD (date of the news article)\",\n"
+                f"    \"whyThisMatters\": \"Explanation of how our engineering productivity metrics platform helps them solve cost overruns or prove AI value\",\n"
+                f"    \"adoptionDepthScore\": 4, // integer 1 to 5\n"
+                f"    \"roiPressureScore\": 4, // integer 1 to 5\n"
+                f"    \"execVisibilityScore\": 4, // integer 1 to 5\n"
+                f"    \"timelinessScore\": 4, // integer 1 to 5\n"
+                f"    \"productRelevanceScore\": 5, // integer 1 to 5\n"
+                f"    \"recommendedTargets\": \"CTO, VP of Engineering, or Head of DevX\",\n"
+                f"    \"outreachAngle\": \"Innovative pitch angle (maximum 20 words)\",\n"
+                f"    \"people\": [\n"
+                f"      {{\n"
+                f"        \"name\": \"Full Name (a real executive at the company or a likely buyer title like Head of Developer Experience)\",\n"
+                f"        \"title\": \"Title (e.g. CTO, VP of Engineering, or Head of Developer Experience)\",\n"
+                f"        \"linkedinUrl\": \"https://www.linkedin.com/in/...\",\n"
+                f"        \"whyThisPerson\": \"Why they are the target buyer\",\n"
+                f"        \"likelyPainTension\": \"Estimated pain points they feel regarding AI spend or engineering efficiency\",\n"
+                f"        \"seniorityType\": \"Tier 1 (CTO) or VP Engineering or DevX Lead\",\n"
+                f"        \"connectionNote\": \"LinkedIn connection invite message (180-280 characters)\",\n"
+                f"        \"firstDM\": \"Direct message pitch (40-90 words)\",\n"
+                f"        \"followUpDM\": \"Follow-up message (25-60 words)\"\n"
+                f"      }}\n"
+                f"    ]\n"
+                f"  }}\n"
+                f"]"
+            )
+            
+            response = model.generate_content(
+                prompt,
+                generation_config={"response_mime_type": "application/json"}
+            )
+            
+            discovered_targets = json.loads(response.text)
+            print(f"Successfully discovered {len(discovered_targets)} new companies via web grounding:")
+            
+            for target in discovered_targets:
+                company_name = target.get("company")
+                if not company_name:
+                    continue
+                    
+                comp_id = company_name.lower().replace(" ", "").replace(".", "").replace(",", "").replace("-", "")
+                print(f" - Discovered target: {company_name} (ID: {comp_id})")
+                
+                # Calculate scores
+                d_score = int(target.get("adoptionDepthScore", 3))
+                r_score = int(target.get("roiPressureScore", 3))
+                e_score = int(target.get("execVisibilityScore", 3))
+                t_score = int(target.get("timelinessScore", 3))
+                p_score = int(target.get("productRelevanceScore", 3))
+                total_score = d_score + r_score + e_score + t_score + p_score
+                
+                # Build company object
+                comp_obj = {
+                    "id": comp_id,
+                    "company": company_name,
+                    "industry": target.get("industry", "Technology"),
+                    "publicEvidence": target.get("publicEvidence", ""),
+                    "sourceUrl": target.get("sourceUrl", "#"),
+                    "evidenceDate": target.get("evidenceDate", datetime.datetime.now().strftime("%Y-%m-%d")),
+                    "intentSummary": target.get("publicEvidence")[:120] + "...",
+                    "whyThisMatters": target.get("whyThisMatters", ""),
+                    "adoptionDepthScore": d_score,
+                    "roiPressureScore": r_score,
+                    "execVisibilityScore": e_score,
+                    "timelinessScore": t_score,
+                    "productRelevanceScore": p_score,
+                    "totalIntentScore": total_score,
+                    "intentBand": "Very High Intent" if total_score >= 22 else "High Intent",
+                    "recommendedTargets": target.get("recommendedTargets", "CTO"),
+                    "bestInitialPersona": target.get("recommendedTargets", "CTO").split(",")[0],
+                    "outreachAngle": target.get("outreachAngle", "Measuring engineering cycles to prove AI spend value."),
+                    "status": "Immediate Outreach",
+                    "notes": ""
+                }
+                
+                active_companies[comp_id] = comp_obj
+                
+                # Build people objects
+                for person in target.get("people", []):
+                    p_name = person.get("name")
+                    if not p_name:
+                        continue
+                        
+                    p_obj = {
+                        "companyId": comp_id,
+                        "company": company_name,
+                        "name": p_name,
+                        "title": person.get("title", "Head of Engineering"),
+                        "linkedinUrl": person.get("linkedinUrl", f"https://www.linkedin.com/search/results/people/?keywords={p_name.replace(' ', '%20')}%20{company_name.replace(' ', '%20')}"),
+                        "whyThisPerson": person.get("whyThisPerson", ""),
+                        "likelyPainTension": person.get("likelyPainTension", ""),
+                        "seniorityType": person.get("seniorityType", "VP Engineering"),
+                        "suggestedChannel": "LinkedIn",
+                        "connectionNote": person.get("connectionNote", ""),
+                        "firstDM": person.get("firstDM", ""),
+                        "followUpDM": person.get("followUpDM", ""),
+                        "confidenceScore": "4/5"
+                    }
+                    active_people[(comp_id, p_name)] = p_obj
+                    
         except Exception as e:
-            print(f"Error during GenAI enrichment: {e}. Falling back to pre-seeded dataset.")
+            print(f"Error during GenAI web discovery: {e}. Preserving current database targets.")
     else:
         print("Notice: No GEMINI_API_KEY environment variable set or google-generativeai module missing.")
         print("Proceeding with pre-seeded outbound database.")
 
-    # 3. Merge default dataset with user-customized fields (e.g. status)
-    merged_companies = []
-    for comp in DEFAULT_COMPANIES:
+    # 3. Merge active dataset with user-customized fields (e.g. status, notes, edits)
+    final_companies = []
+    for cid, comp in active_companies.items():
         comp_copy = comp.copy()
-        # Restore user status/notes if they existed
-        comp_copy["status"] = status_map.get(comp["id"], comp.get("status", "Immediate Outreach"))
-        comp_copy["notes"] = notes_map.get(comp["id"], "")
+        # Restore user status/notes if they existed in the loaded results.json
+        comp_copy["status"] = status_map.get(cid, comp.get("status", "Immediate Outreach"))
+        comp_copy["notes"] = notes_map.get(cid, comp.get("notes", ""))
         comp_copy["lastUpdated"] = datetime.datetime.now().isoformat()
-        merged_companies.append(comp_copy)
+        final_companies.append(comp_copy)
         
-    merged_people = []
-    for person in DEFAULT_PEOPLE:
-        merged_people.append(person.copy())
+    final_people = []
+    for (cid, p_name), person in active_people.items():
+        person_copy = person.copy()
+        # Restore user edited connectionNote, firstDM, followUpDM, and linkedinUrl if they existed
+        for field in ["connectionNote", "firstDM", "followUpDM", "linkedinUrl"]:
+            key = (cid, p_name, field)
+            if key in people_templates_map:
+                person_copy[field] = people_templates_map[key]
+        final_people.append(person_copy)
+        
+    # Sort companies by total intent score descending
+    final_companies.sort(key=lambda x: x.get("totalIntentScore", 0), reverse=True)
         
     results = {
-        "companies": merged_companies,
-        "people": merged_people,
+        "companies": final_companies,
+        "people": final_people,
         "lastRunTimestamp": datetime.datetime.now().isoformat()
     }
     
