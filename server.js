@@ -13,7 +13,7 @@ const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DATA_FILE = path.join(__dirname, 'data', 'results.json');
+const DATA_FILE = path.join(__dirname, 'docs', 'data', 'results.json');
 
 app.use(express.json());
 

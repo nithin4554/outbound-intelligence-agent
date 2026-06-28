@@ -20,7 +20,7 @@ try:
 except ImportError:
     pass
 
-DATA_DIR = Path(__file__).parent / "data"
+DATA_DIR = Path(__file__).parent / "docs" / "data"
 RESULTS_FILE = DATA_DIR / "results.json"
 
 # Pre-seeded high-conviction database of the top accounts and signals researched
