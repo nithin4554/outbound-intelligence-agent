@@ -1,0 +1,20 @@
+{
+  "name": "outbound-agent",
+  "version": "1.0.0",
+  "description": "Daily automated B2B outbound intelligence agent and web dashboard",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "node server.js",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "vite": "^5.2.11"
+  }
+}
