@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Outbound Intelligence Console | B2B AI Sales</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/outbound-intelligence-agent/assets/index-DWUPL8_L.js"></script>
+  <link rel="stylesheet" crossorigin href="/outbound-intelligence-agent/assets/index-6RQMKc9q.css">
+</head>
+<body class="dark-theme">
+  <div class="app-container">
+    
+    <!-- Top Nav / Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-icon"></div>
+        <div class="logo-text">
+          <h1>Outbound Intel</h1>
+          <span>B2B AI ROI Target & Outreach Automation</span>
+        </div>
+      </div>
+      
+      <div class="system-status">
+        <div class="timestamp-box">
+          <span class="label">Last Automation Run:</span>
+          <span id="last-run-time" class="value">Loading...</span>
+        </div>
+        <button id="run-pipeline-btn" class="btn btn-primary run-btn">
+          <span class="btn-icon">⚡</span>
+          <span class="btn-text">Run Automation Pipeline</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Run Progress Overlay / Logs Drawer (Hidden by default) -->
+    <div id="pipeline-logs-drawer" class="logs-drawer hidden">
+      <div class="drawer-header">
+        <h3>Pipeline Execution Console</h3>
+        <button id="close-logs-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="drawer-body">
+        <div class="pipeline-progress-bar">
+          <div id="pipeline-progress-fill" class="progress-fill"></div>
+        </div>
+        <div class="status-indicator">
+          Status: <span id="pipeline-status-text">Running python3 agent.py...</span>
+        </div>
+        <pre id="raw-logs" class="terminal-logs">Initializing execution context...</pre>
+      </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="app-workspace">
+      
+      <!-- Left Column: Accounts List -->
+      <section class="workspace-sidebar">
+        <div class="sidebar-search">
+          <input type="text" id="search-input" placeholder="Search accounts or signals..." autocomplete="off">
+          <div class="filter-controls">
+            <select id="status-filter">
+              <option value="all">All Statuses</option>
+              <option value="Immediate Outreach">Immediate Outreach</option>
+              <option value="Watchlist">Watchlist</option>
+              <option value="Deprioritize">Deprioritize</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="accounts-list-container">
+          <div class="list-header">
+            <span>Target Accounts</span>
+            <span class="count-badge" id="accounts-count">0</span>
+          </div>
+          <ul id="accounts-list" class="accounts-list">
+            <!-- Rendered dynamically -->
+            <li class="loading-placeholder">Loading target accounts...</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Right Column: Account Details Workspace -->
+      <section class="workspace-content" id="detail-workspace">
+        <!-- Rendered dynamically via main.js -->
+        <div class="empty-state">
+          <div class="empty-state-icon">🎯</div>
+          <h2>Select a high-intent account</h2>
+          <p>Click on any target company in the sidebar to view detailed signals, mapped buyer personas, and personalized outreach templates.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>

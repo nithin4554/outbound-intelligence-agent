@@ -21,7 +21,7 @@
       "outreachAngle": "Correlating grassroots agentic tool adoption with cycle-time improvements and spend control.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357310"
+      "lastUpdated": "2026-06-28T13:22:41.821835"
     },
     {
       "id": "jpmorgan",
@@ -44,7 +44,7 @@
       "outreachAngle": "Moving beyond binary usage tracking to verify durable, team-level cycle-time gains.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357315"
+      "lastUpdated": "2026-06-28T13:22:41.821840"
     },
     {
       "id": "vanguard",
@@ -67,7 +67,7 @@
       "outreachAngle": "Integrating developer surveys with hard workflow telemetry to identify bottlenecks outside of coding.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357318"
+      "lastUpdated": "2026-06-28T13:22:41.821843"
     },
     {
       "id": "booking",
@@ -90,7 +90,7 @@
       "outreachAngle": "Tracking whether a 16% higher PR merge rate translates to faster cycle times or code review bottlenecks.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357320"
+      "lastUpdated": "2026-06-28T13:22:41.821845"
     },
     {
       "id": "goldmansachs",
@@ -113,7 +113,7 @@
       "outreachAngle": "Telemetry for verifying the safety and cycle-time impact of agentic code contributions.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357322"
+      "lastUpdated": "2026-06-28T13:22:41.821847"
     },
     {
       "id": "cognizant",
@@ -136,7 +136,7 @@
       "outreachAngle": "Bridging the 'value gap' by converting token spend into verifiable delivery outcomes.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357324"
+      "lastUpdated": "2026-06-28T13:22:41.821849"
     },
     {
       "id": "capitalone",
@@ -159,7 +159,7 @@
       "outreachAngle": "Providing the telemetry foundation for their 'AI & Developer Productivity Data Strategy.'",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357325"
+      "lastUpdated": "2026-06-28T13:22:41.821851"
     },
     {
       "id": "stripe",
@@ -182,7 +182,7 @@
       "outreachAngle": "Measuring the code review velocity and throughput bottlenecks created by autonomous agents.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357327"
+      "lastUpdated": "2026-06-28T13:22:41.821852"
     },
     {
       "id": "netflix",
@@ -205,7 +205,7 @@
       "outreachAngle": "Telemetry to correlate AI code generation with successful production deployments.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357329"
+      "lastUpdated": "2026-06-28T13:22:41.821854"
     },
     {
       "id": "wayfair",
@@ -228,7 +228,7 @@
       "outreachAngle": "Balancing accelerated code delivery with release safety telemetry.",
       "status": "Immediate Outreach",
       "notes": "",
-      "lastUpdated": "2026-06-28T13:17:26.357330"
+      "lastUpdated": "2026-06-28T13:22:41.821859"
     }
   ],
   "people": [
@@ -383,5 +383,5 @@
       "confidenceScore": "4/5"
     }
   ],
-  "lastRunTimestamp": "2026-06-28T13:17:26.357334"
+  "lastRunTimestamp": "2026-06-28T13:22:41.821863"
 }

@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 });
 
 // Serve frontend build output in production
-app.use(express.static(path.join(__dirname, 'dist')));
+app.use(express.static(path.join(__dirname, 'docs')));
 
 // API: Get current results
 app.get('/api/results', (req, res) => {
@@ -166,7 +166,7 @@ app.post('/api/run-agent', (req, res) => {
 
 // Serve frontend routing fallback
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  res.sendFile(path.join(__dirname, 'docs', 'index.html'));
 });
 
 app.listen(PORT, () => {

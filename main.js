@@ -1,4 +1,6 @@
 // Main Application State
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 let appState = {
   companies: [],
   people: [],
@@ -28,6 +30,14 @@ const elements = {
 // Initializer
 async function init() {
   setupEventListeners();
+  
+  if (!isLocal) {
+    elements.runPipelineBtn.disabled = true;
+    elements.runPipelineBtn.style.opacity = '0.5';
+    elements.runPipelineBtn.style.cursor = 'not-allowed';
+    elements.runPipelineBtn.querySelector('.btn-text').textContent = 'Cloud View (Read-Only)';
+  }
+  
   await fetchResults();
   
   // Select first company if list is not empty
@@ -41,7 +51,8 @@ async function init() {
 // Fetch data from local Express backend
 async function fetchResults() {
   try {
-    const response = await fetch('/api/results');
+    const fetchUrl = isLocal ? '/api/results' : '/outbound-intelligence-agent/data/results.json';
+    const response = await fetch(fetchUrl);
     if (!response.ok) throw new Error('API server unavailable.');
     const data = await response.json();
     
@@ -225,7 +236,7 @@ function renderDetails() {
       <div class="detail-actions">
         <div class="status-dropdown-wrapper">
           <label>Campaign Status:</label>
-          <select class="status-dropdown" id="detail-status-select">
+          <select class="status-dropdown" id="detail-status-select" ${isLocal ? '' : 'disabled'}>
             <option value="Immediate Outreach" ${company.status === 'Immediate Outreach' ? 'selected' : ''}>Immediate Outreach</option>
             <option value="Watchlist" ${company.status === 'Watchlist' ? 'selected' : ''}>Watchlist</option>
             <option value="Deprioritize" ${company.status === 'Deprioritize' ? 'selected' : ''}>Deprioritize</option>
@@ -236,6 +247,12 @@ function renderDetails() {
 
     <!-- Body -->
     <div class="detail-body">
+      ${isLocal ? '' : `
+        <div class="cloud-banner" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.25); padding: 0.75rem 1.25rem; border-radius: 8px; font-size: 0.8rem; color: #93c5fd; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+          <span>☁️</span>
+          <span>Running in View-Only mode on GitHub Pages. To trigger pipeline runs, save strategy notes, or edit templates, run locally at <strong>http://localhost:3000</strong>.</span>
+        </div>
+      `}
       <!-- Top Grid: Intent and Notes -->
       <div class="intel-grid">
         <div class="left-cards">
@@ -258,10 +275,12 @@ function renderDetails() {
           <!-- Notes Card -->
           <div class="intel-card notes-card">
             <h3>📝 Campaign Strategy Notes</h3>
-            <textarea id="company-notes-textarea" placeholder="Add custom constraints, execution logs, or comments for this account...">${company.notes || ''}</textarea>
-            <div class="notes-footer">
-              <button id="save-notes-btn" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.75rem; font-size:0.75rem;">Save Notes</button>
-            </div>
+            <textarea id="company-notes-textarea" ${isLocal ? '' : 'disabled'} placeholder="${isLocal ? 'Add custom constraints, execution logs, or comments for this account...' : 'Strategy notes are read-only in cloud mode.'}">${company.notes || ''}</textarea>
+            ${isLocal ? `
+              <div class="notes-footer">
+                <button id="save-notes-btn" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.75rem; font-size:0.75rem;">Save Notes</button>
+              </div>
+            ` : ''}
           </div>
         </div>
 
@@ -358,12 +377,13 @@ function renderPersonCard(person, generalAngle) {
 }
 
 function renderTemplateSection(companyId, name, field, title, content) {
+  const editBtn = isLocal ? `<button class="template-btn edit-msg-btn" data-company-id="${companyId}" data-name="${name}" data-field="${field}">Edit</button>` : '';
   return `
     <div class="template-section">
       <div class="template-section-header">
         <label>${title}</label>
         <div class="template-actions">
-          <button class="template-btn edit-msg-btn" data-company-id="${companyId}" data-name="${name}" data-field="${field}">Edit</button>
+          ${editBtn}
           <button class="template-btn copy-msg-btn" data-text="${content.replace(/"/g, '&quot;')}">Copy</button>
         </div>
       </div>
