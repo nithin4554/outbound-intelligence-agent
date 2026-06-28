@@ -51,7 +51,7 @@ async function init() {
 // Fetch data from local Express backend
 async function fetchResults() {
   try {
-    const fetchUrl = isLocal ? '/api/results' : '/outbound-intelligence-agent/data/results.json';
+    const fetchUrl = isLocal ? '/api/results' : './data/results.json';
     const response = await fetch(fetchUrl);
     if (!response.ok) throw new Error('API server unavailable.');
     const data = await response.json();

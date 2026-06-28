@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/outbound-intelligence-agent/',
+  base: './',
   build: {
     outDir: 'docs',
     emptyOutDir: true
