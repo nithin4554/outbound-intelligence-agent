@@ -7,9 +7,13 @@ echo "===========================================" >> run-daily.log
 echo "Starting automation run: $(date)" >> run-daily.log
 python3 agent.py >> run-daily.log 2>&1
 
+# Build the project to copy public/data/results.json into the docs/ output folder
+echo "Rebuilding Vite frontend assets..." >> run-daily.log
+npm run build >> run-daily.log 2>&1
+
 # Auto-push updated results.json database to GitHub to refresh Pages dashboard
 echo "Pushing updated database to GitHub..." >> run-daily.log
-git add docs/data/results.json >> run-daily.log 2>&1
+git add public/data/results.json docs/data/results.json >> run-daily.log 2>&1
 git commit -m "Auto-update outbound intelligence data: $(date)" >> run-daily.log 2>&1
 git push origin main >> run-daily.log 2>&1
 
